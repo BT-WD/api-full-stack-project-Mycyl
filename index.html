@@ -6,17 +6,40 @@
     <title>Trivia Master - Test Your Knowledge</title>
     <link rel="stylesheet" href="index.css" />
   </head>
+
   <body>
+
     <div class="container">
+
       <!-- Landing Page -->
       <section id="landing-page" class="page active">
+
         <div class="landing-content">
+
           <h1 class="title">Trivia Master</h1>
-          <p class="subtitle">Test Your Knowledge Across Multiple Categories</p>
-          
+
+          <p class="subtitle">
+            Test Your Knowledge Across Multiple Categories
+          </p>
+
           <div class="settings-card">
+
+            <!-- Player Name -->
+            <div class="setting-group">
+              <label for="player-name">Player Name:</label>
+
+              <input
+                type="text"
+                id="player-name"
+                class="select-input"
+                placeholder="Enter your name"
+              />
+            </div>
+
+            <!-- Difficulty -->
             <div class="setting-group">
               <label for="difficulty">Difficulty Level:</label>
+
               <select id="difficulty" class="select-input">
                 <option value="">Any Difficulty</option>
                 <option value="easy">Easy</option>
@@ -25,8 +48,10 @@
               </select>
             </div>
 
+            <!-- Category -->
             <div class="setting-group">
               <label for="category">Category:</label>
+
               <select id="category" class="select-input">
                 <option value="">Any Category</option>
                 <option value="9">General Knowledge</option>
@@ -39,86 +64,197 @@
               </select>
             </div>
 
+            <!-- Amount -->
             <div class="setting-group">
               <label for="amount">Number of Questions:</label>
-              <input type="number" id="amount" class="select-input" min="1" max="50" value="10" />
+
+              <input
+                type="number"
+                id="amount"
+                class="select-input"
+                min="1"
+                max="50"
+                value="10"
+              />
             </div>
+
           </div>
 
-          <button id="start-btn" class="btn btn-primary">Start Quiz</button>
-          
-          <div class="stats-preview">
-            <p id="high-score-display">High Score: 0</p>
-          </div>
+          <button id="start-btn" class="btn btn-primary">
+            Start Quiz
+          </button>
+
         </div>
+
       </section>
 
       <!-- Quiz Page -->
       <section id="quiz-page" class="page">
+
         <div class="quiz-header">
+
           <div class="progress-bar">
             <div id="progress-fill" class="progress-fill"></div>
           </div>
+
           <div class="quiz-info">
-            <span id="question-counter">Question 1 of 10</span>
-            <span id="score-display">Score: 0</span>
-            <span id="timer">⏳ 15s</span>
+
+            <span id="question-counter">
+              Question 1 of 10
+            </span>
+
+            <span id="score-display">
+              Score: 0
+            </span>
+
+            <span id="timer">
+              ⏳ 15s
+            </span>
+
           </div>
+
         </div>
 
         <div class="quiz-content">
+
           <div class="question-container">
-            <p id="question-text" class="question-text">Question placeholder</p>
-            <p id="question-category" class="question-category">Category</p>
-            <p id="question-difficulty" class="question-difficulty">Difficulty</p>
+
+            <p id="question-text" class="question-text">
+              Question placeholder
+            </p>
+
+            <p id="question-category" class="question-category">
+              Category
+            </p>
+
+            <p id="question-difficulty" class="question-difficulty">
+              Difficulty
+            </p>
+
           </div>
 
-          <div class="answers-container" id="answers-container">
-            <!-- Answer buttons will be dynamically generated -->
-            <button class="answer-btn">Answer 1</button>
-            <button class="answer-btn">Answer 2</button>
-            <button class="answer-btn">Answer 3</button>
-            <button class="answer-btn">Answer 4</button>
-          </div>
+          <div
+            class="answers-container"
+            id="answers-container"
+          ></div>
 
           <div class="quiz-controls">
-            <button id="next-btn" class="btn btn-secondary" disabled>Next Question</button>
+
+            <button
+              id="next-btn"
+              class="btn btn-secondary"
+              disabled
+            >
+              Next Question
+            </button>
+
           </div>
+
         </div>
+
       </section>
 
       <!-- Results Page -->
       <section id="results-page" class="page">
+
         <div class="results-content">
-          <h2 class="results-title">Quiz Complete!</h2>
-          
+
+          <h2 class="results-title">
+            Quiz Complete!
+          </h2>
+
           <div class="results-card">
+
             <div class="score-circle">
-              <p id="final-score" class="final-score">0</p>
-              <p class="score-label">/ 10</p>
+
+              <p id="final-score" class="final-score">
+                0
+              </p>
+
+              <p class="score-label">
+                / 10
+              </p>
+
             </div>
 
             <div class="results-stats">
-              <p id="results-message" class="results-message">Great job!</p>
+
+              <p
+                id="results-message"
+                class="results-message"
+              >
+                Great job!
+              </p>
+
               <div class="stat-row">
                 <span>Correct Answers:</span>
                 <span id="correct-count">0</span>
               </div>
+
               <div class="stat-row">
                 <span>Accuracy:</span>
                 <span id="accuracy-percentage">0%</span>
               </div>
+
             </div>
+
+          </div>
+
+          <!-- Statistics Dashboard -->
+          <div class="stats-dashboard">
+
+            <h3>Player Statistics</h3>
+
+            <div class="stats-grid">
+
+              <div class="stat-box">
+                <p>Games Played</p>
+                <h2 id="games-played">0</h2>
+              </div>
+
+              <div class="stat-box">
+                <p>Best Score</p>
+                <h2 id="best-score">0</h2>
+              </div>
+
+              <div class="stat-box">
+                <p>Average Accuracy</p>
+                <h2 id="average-score">0%</h2>
+              </div>
+
+            </div>
+
+            <h3>Recent Quiz History</h3>
+
+            <div id="history-container"></div>
+
           </div>
 
           <div class="results-buttons">
-            <button id="retake-btn" class="btn btn-primary">Retake Quiz</button>
-            <button id="home-btn" class="btn btn-secondary">Back to Home</button>
+
+            <button
+              id="retake-btn"
+              class="btn btn-primary"
+            >
+              Retake Quiz
+            </button>
+
+            <button
+              id="home-btn"
+              class="btn btn-secondary"
+            >
+              Back to Home
+            </button>
+
           </div>
+
         </div>
+
       </section>
+
     </div>
 
     <script src="app.js"></script>
+
   </body>
 </html>

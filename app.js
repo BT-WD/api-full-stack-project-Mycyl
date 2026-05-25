@@ -12,21 +12,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const homeBtn = document.getElementById('home-btn');
 
     // ===== Inputs =====
+    const playerNameInput = document.getElementById('player-name');
     const difficultySelect = document.getElementById('difficulty');
     const categorySelect = document.getElementById('category');
     const amountInput = document.getElementById('amount');
 
-    // ===== Question Elements =====
+    // ===== Quiz =====
     const questionText = document.getElementById('question-text');
     const questionCategory = document.getElementById('question-category');
     const questionDifficulty = document.getElementById('question-difficulty');
-
     const answersContainer = document.getElementById('answers-container');
 
     // ===== Quiz Info =====
     const questionCounter = document.getElementById('question-counter');
     const scoreDisplay = document.getElementById('score-display');
     const progressFill = document.getElementById('progress-fill');
+    const timerDisplay = document.getElementById('timer');
 
     // ===== Results =====
     const finalScore = document.getElementById('final-score');
@@ -34,8 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const accuracyPercentage = document.getElementById('accuracy-percentage');
     const resultsMessage = document.getElementById('results-message');
 
-    // ===== Timer =====
-    const timerDisplay = document.getElementById('timer');
+    // ===== Stats =====
+    const gamesPlayedDisplay = document.getElementById('games-played');
+    const bestScoreDisplay = document.getElementById('best-score');
+    const averageScoreDisplay = document.getElementById('average-score');
+    const historyContainer = document.getElementById('history-container');
 
     // ===== State =====
     let questions = [];
@@ -50,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== Utility =====
     function showPage(page) {
+
         document.querySelectorAll('.page').forEach(p => {
             p.classList.remove('active');
         });
@@ -110,12 +115,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
 
+            const playerName = playerNameInput.value.trim();
+
+            if (!playerName) {
+                alert('Please enter your name.');
+                return;
+            }
+
             let amount = parseInt(amountInput.value);
 
             if (isNaN(amount) || amount < 1 || amount > 50) {
                 alert('Please enter between 1 and 50 questions.');
                 return;
             }
+
+            saveSettings();
 
             totalQuestions = amount;
 
@@ -145,10 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             questions = data.questions;
 
-            if (!questions.length) {
-                throw new Error('No questions available.');
-            }
-
             currentQuestionIndex = 0;
             score = 0;
 
@@ -158,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
 
-            console.error('CLIENT ERROR:', error);
+            console.error(error);
 
             alert(`⚠️ ${error.message}`);
 
@@ -175,12 +185,6 @@ document.addEventListener('DOMContentLoaded', () => {
         answered = false;
 
         const currentQuestion = questions[currentQuestionIndex];
-
-        questionText.classList.remove('fade');
-
-        void questionText.offsetWidth;
-
-        questionText.classList.add('fade');
 
         questionText.textContent = currentQuestion.question;
 
@@ -235,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ===== Validate Answer =====
+    // ===== Validate =====
     function validateAnswer(selectedAnswer, correctAnswer, buttonElement) {
 
         const allButtons = document.querySelectorAll('.answer-btn');
@@ -265,10 +269,136 @@ document.addEventListener('DOMContentLoaded', () => {
         nextBtn.disabled = false;
     }
 
+    // ===== Save Quiz Result =====
+    function saveQuizResult() {
+
+        const history =
+            JSON.parse(localStorage.getItem('quizHistory')) || [];
+
+        const playerName = playerNameInput.value.trim();
+
+        const result = {
+            player: playerName,
+            score,
+            total: totalQuestions,
+            accuracy: Math.round((score / totalQuestions) * 100),
+            difficulty: difficultySelect.value || 'Any',
+            category:
+                categorySelect.options[
+                    categorySelect.selectedIndex
+                ].text,
+            date: new Date().toLocaleString()
+        };
+
+        history.push(result);
+
+        localStorage.setItem(
+            'quizHistory',
+            JSON.stringify(history)
+        );
+    }
+
+    // ===== Save Settings =====
+    function saveSettings() {
+
+        const settings = {
+            playerName: playerNameInput.value,
+            difficulty: difficultySelect.value,
+            category: categorySelect.value,
+            amount: amountInput.value
+        };
+
+        localStorage.setItem(
+            'quizSettings',
+            JSON.stringify(settings)
+        );
+    }
+
+    // ===== Load Settings =====
+    function loadSettings() {
+
+        const settings =
+            JSON.parse(localStorage.getItem('quizSettings'));
+
+        if (!settings) return;
+
+        playerNameInput.value = settings.playerName || '';
+        difficultySelect.value = settings.difficulty || '';
+        categorySelect.value = settings.category || '';
+        amountInput.value = settings.amount || 10;
+    }
+
+    // ===== Load Statistics =====
+    function loadStatistics() {
+
+        const history =
+            JSON.parse(localStorage.getItem('quizHistory')) || [];
+
+        const gamesPlayed = history.length;
+
+        gamesPlayedDisplay.textContent = gamesPlayed;
+
+        if (gamesPlayed === 0) {
+
+            bestScoreDisplay.textContent = '0';
+            averageScoreDisplay.textContent = '0%';
+
+            historyContainer.innerHTML =
+                '<p>No games played yet.</p>';
+
+            return;
+        }
+
+        let bestScore = 0;
+        let totalAccuracy = 0;
+
+        history.forEach(game => {
+
+            if (game.score > bestScore) {
+                bestScore = game.score;
+            }
+
+            totalAccuracy += game.accuracy;
+        });
+
+        const average =
+            Math.round(totalAccuracy / gamesPlayed);
+
+        bestScoreDisplay.textContent = bestScore;
+        averageScoreDisplay.textContent = `${average}%`;
+
+        historyContainer.innerHTML = '';
+
+        history
+            .slice()
+            .reverse()
+            .slice(0, 5)
+            .forEach(game => {
+
+                const div = document.createElement('div');
+
+                div.className = 'history-card';
+
+                div.innerHTML = `
+                    <h4>${game.player}</h4>
+                    <p>Score: ${game.score}/${game.total}</p>
+                    <p>Accuracy: ${game.accuracy}%</p>
+                    <p>${game.category}</p>
+                    <p>${game.date}</p>
+                `;
+
+                historyContainer.appendChild(div);
+            });
+    }
+
     // ===== Results =====
     function displayResults() {
 
         clearInterval(timer);
+
+        saveQuizResult();
+
+        loadStatistics();
 
         const accuracy =
             Math.round((score / totalQuestions) * 100);
@@ -280,15 +410,22 @@ document.addEventListener('DOMContentLoaded', () => {
         accuracyPercentage.textContent = `${accuracy}%`;
 
         if (accuracy === 100) {
+
             resultsMessage.textContent =
                 '🎉 Perfect Score!';
+
         } else if (accuracy >= 80) {
+
             resultsMessage.textContent =
                 '🔥 Amazing job!';
+
         } else if (accuracy >= 60) {
+
             resultsMessage.textContent =
                 '👍 Great work!';
+
         } else {
+
             resultsMessage.textContent =
                 '📚 Keep practicing!';
         }
@@ -321,11 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showPage(landingPage);
     });
 
-    // ===== Keyboard Support =====
-    document.addEventListener('keydown', e => {
-
-        if (e.key === 'Enter' && !nextBtn.disabled) {
-            nextBtn.click();
-        }
-    });
+    // ===== Initialize =====
+    loadSettings();
+    loadStatistics();
 });
