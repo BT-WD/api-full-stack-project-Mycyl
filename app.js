@@ -10,12 +10,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextBtn = document.getElementById('next-btn');
     const retakeBtn = document.getElementById('retake-btn');
     const homeBtn = document.getElementById('home-btn');
+    const darkModeBtn = document.getElementById('dark-mode-btn');
 
     // ===== Inputs =====
     const playerNameInput = document.getElementById('player-name');
     const difficultySelect = document.getElementById('difficulty');
     const categorySelect = document.getElementById('category');
     const amountInput = document.getElementById('amount');
+    const searchInput = document.getElementById('search-input');
 
     // ===== Quiz =====
     const questionText = document.getElementById('question-text');
@@ -28,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const scoreDisplay = document.getElementById('score-display');
     const progressFill = document.getElementById('progress-fill');
     const timerDisplay = document.getElementById('timer');
+    const streakDisplay = document.getElementById('streak-display');
 
     // ===== Results =====
     const finalScore = document.getElementById('final-score');
@@ -35,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const accuracyPercentage = document.getElementById('accuracy-percentage');
     const resultsMessage = document.getElementById('results-message');
 
-    // ===== Stats =====
+    // ===== Statistics =====
     const gamesPlayedDisplay = document.getElementById('games-played');
     const bestScoreDisplay = document.getElementById('best-score');
     const averageScoreDisplay = document.getElementById('average-score');
@@ -46,11 +49,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentQuestionIndex = 0;
     let score = 0;
     let totalQuestions = 10;
-
     let answered = false;
 
     let timer;
     let timeLeft = 15;
+
+    let streak = 0;
 
     // ===== Utility =====
     function showPage(page) {
@@ -60,6 +64,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         page.classList.add('active');
+    }
+
+    // ===== Theme =====
+    function toggleDarkMode() {
+
+        document.body.classList.toggle('dark-mode');
+
+        const isDark =
+            document.body.classList.contains('dark-mode');
+
+        localStorage.setItem('darkMode', isDark);
+    }
+
+    function loadTheme() {
+
+        const darkMode =
+            localStorage.getItem('darkMode') === 'true';
+
+        if (darkMode) {
+            document.body.classList.add('dark-mode');
+        }
     }
 
     // ===== Timer =====
@@ -93,6 +118,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (answered) return;
 
         answered = true;
+
+        streak = 0;
+
+        streakDisplay.textContent = `🔥 Streak: ${streak}`;
 
         const currentQuestion = questions[currentQuestionIndex];
 
@@ -134,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
             totalQuestions = amount;
 
             startBtn.disabled = true;
-            startBtn.textContent = 'Loading...';
+            startBtn.textContent = 'Loading Questions...';
 
             let query = `/trivia?amount=${amount}&type=multiple`;
 
@@ -159,8 +188,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
             questions = data.questions;
 
+            if (searchInput.value.trim()) {
+
+                questions = questions.filter(q =>
+                    q.question
+                        .toLowerCase()
+                        .includes(
+                            searchInput.value.toLowerCase()
+                        )
+                );
+            }
+
+            if (questions.length === 0) {
+                throw new Error(
+                    'No questions match your search.'
+                );
+            }
+
             currentQuestionIndex = 0;
             score = 0;
+            streak = 0;
+
+            streakDisplay.textContent = `🔥 Streak: ${streak}`;
 
             displayQuestion();
 
@@ -220,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const button = document.createElement('button');
 
-            button.className = 'answer-btn';
+            button.className = 'answer-btn fade-in';
 
             button.textContent = answer;
 
@@ -232,7 +281,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 clearInterval(timer);
 
-                validateAnswer(answer, question.correct_answer, button);
+                validateAnswer(
+                    answer,
+                    question.correct_answer,
+                    button
+                );
             });
 
             answersContainer.appendChild(button);
@@ -240,9 +293,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===== Validate =====
-    function validateAnswer(selectedAnswer, correctAnswer, buttonElement) {
+    function validateAnswer(
+        selectedAnswer,
+        correctAnswer,
+        buttonElement
+    ) {
 
-        const allButtons = document.querySelectorAll('.answer-btn');
+        const allButtons =
+            document.querySelectorAll('.answer-btn');
 
         allButtons.forEach(btn => {
             btn.disabled = true;
@@ -252,9 +310,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             score++;
 
+            streak++;
+
+            streakDisplay.textContent =
+                `🔥 Streak: ${streak}`;
+
             buttonElement.classList.add('correct');
 
+            if (streak >= 3) {
+                createConfetti();
+            }
+
         } else {
+
+            streak = 0;
+
+            streakDisplay.textContent =
+                `🔥 Streak: ${streak}`;
 
             buttonElement.classList.add('incorrect');
 
@@ -269,16 +341,38 @@ document.addEventListener('DOMContentLoaded', () => {
         nextBtn.disabled = false;
     }
 
-    // ===== Save Quiz Result =====
+    // ===== Confetti =====
+    function createConfetti() {
+
+        for (let i = 0; i < 30; i++) {
+
+            const confetti =
+                document.createElement('div');
+
+            confetti.className = 'confetti';
+
+            confetti.style.left =
+                Math.random() * 100 + 'vw';
+
+            confetti.style.animationDuration =
+                Math.random() * 2 + 2 + 's';
+
+            document.body.appendChild(confetti);
+
+            setTimeout(() => {
+                confetti.remove();
+            }, 4000);
+        }
+    }
+
+    // ===== Save Quiz =====
     function saveQuizResult() {
 
         const history =
             JSON.parse(localStorage.getItem('quizHistory')) || [];
 
-        const playerName = playerNameInput.value.trim();
-
         const result = {
-            player: playerName,
+            player: playerNameInput.value.trim(),
             score,
             total: totalQuestions,
             accuracy: Math.round((score / totalQuestions) * 100),
@@ -328,7 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
         amountInput.value = settings.amount || 10;
     }
 
-    // ===== Load Statistics =====
+    // ===== Statistics =====
     function loadStatistics() {
 
         const history =
@@ -377,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const div = document.createElement('div');
 
-                div.className = 'history-card';
+                div.className = 'history-card fade-in';
 
                 div.innerHTML = `
                     <h4>${game.player}</h4>
@@ -412,22 +506,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (accuracy === 100) {
 
             resultsMessage.textContent =
-                '🎉 Perfect Score!';
+                '🏆 PERFECT SCORE!';
+
+            createConfetti();
 
         } else if (accuracy >= 80) {
 
             resultsMessage.textContent =
-                '🔥 Amazing job!';
+                '🔥 Excellent Work!';
 
         } else if (accuracy >= 60) {
 
             resultsMessage.textContent =
-                '👍 Great work!';
+                '👍 Great Job!';
 
         } else {
 
             resultsMessage.textContent =
-                '📚 Keep practicing!';
+                '📚 Keep Practicing!';
         }
 
         showPage(resultsPage);
@@ -458,7 +554,10 @@ document.addEventListener('DOMContentLoaded', () => {
         showPage(landingPage);
     });
 
+    darkModeBtn.addEventListener('click', toggleDarkMode);
+
     // ===== Initialize =====
     loadSettings();
     loadStatistics();
+    loadTheme();
 });
